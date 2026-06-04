@@ -30,31 +30,31 @@ Platform tanda tangan digital resmi Universitas Lampung — memungkinkan dosen d
 ```bash
 .
 ├── artifacts
-│   ├── api-server
+│   ├── api-server                  # API server source code
 │   │   └── src
-│   │       ├── lib
-│   │       ├── middlewares
-│   │       ├── routes
+│   │       ├── lib                 # Auth utilities
+│   │       ├── middlewares         # Request middlewares
+│   │       ├── routes              # API routes
 │   │       ├── app.ts
 │   │       └── index.ts
-│   └── unila-digital-sign
-│       ├── public
+│   └── unila-digital-sign          # Frontend source code
+│       ├── public                  # Static assets
 │       ├── src
-│       │   ├── components
+│       │   ├── components          # React components
 │       │   │   ├── layout
 │       │   │   └── ui
-│       │   ├── lib
-│       │   ├── pages
+│       │   ├── lib                 # Auth utilities
+│       │   ├── pages               # React pages
 │       │   │    └── admin
 │       │   ├── App.tsx
 │       │   ├── index.css
 │       │   └── main.tsx
 │       └── vite.config.ts
-├── lib
-│   └── db
+├── lib                             # Shared utilities and libraries
+│   └── db                          # Database schema and utilities
 │       └── src
 │           └── schema
-├── .env
+├── .env                            # Environment variables
 └── README.md
 ```
 
@@ -74,3 +74,30 @@ Platform tanda tangan digital resmi Universitas Lampung — memungkinkan dosen d
 - UI language: Bahasa Indonesia
 - Color scheme: White and blue (Universitas Lampung brand)
 - Logo: `artifacts/unila-digital-sign/public/Logo-unila.png`
+
+## Installation & Running
+
+1. Clone the repository
+```
+git clone https://github.com/Rifanism/katala.git
+```
+2. Install dependencies
+```
+cd katala
+npm install
+```
+3. Push database schema (postgresql)
+```
+psql -U <username> -c "CREATE DATABASE unila_digital_sign;"
+pnpm --filter @workspace/db run push
+```
+4. Environment variables
+Create a `.env` file in the root directory with the following variables:
+```
+DATABASE_URL=postgresql://<username>:<password>@localhost:5432/unila_digital_sign
+SESSION_SECRET=random string
+```
+5. Run
+```
+./dev.sh
+```
