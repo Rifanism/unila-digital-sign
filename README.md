@@ -79,7 +79,7 @@ Platform tanda tangan digital resmi Universitas Lampung — memungkinkan dosen d
 
 1. Clone the repository
 ```
-git clone https://github.com/Rifanism/katala.git
+git clone https://github.com/Rifanism/unila-digital-sign.git
 ```
 2. Install dependencies
 ```
