@@ -1,0 +1,1133 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Unila Digital Sign API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: otp
+    description: OTP setup and management
+  - name: certificate
+    description: CA Certificate
+  - name: digital-id
+    description: Digital ID management
+  - name: signature
+    description: Signature image management
+  - name: documents
+    description: Document signing
+  - name: admin
+    description: Admin operations
+  - name: verify
+    description: Document verification
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # Auth
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
+  /auth/change-password:
+    post:
+      operationId: changePassword
+      tags: [auth]
+      summary: Change password (requires old password + OTP)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordInput"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid old password or OTP
+        "401":
+          description: Unauthorized
+
+  # OTP
+  /otp/setup:
+    get:
+      operationId: getOtpSetup
+      tags: [otp]
+      summary: Get OTP QR code and secret for setup
+      responses:
+        "200":
+          description: OTP setup data with QR code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpSetup"
+        "401":
+          description: Unauthorized
+
+  /otp/verify:
+    post:
+      operationId: verifyOtp
+      tags: [otp]
+      summary: Verify OTP code to complete setup or authenticate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpVerifyInput"
+      responses:
+        "200":
+          description: OTP verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpVerifyResponse"
+        "400":
+          description: Invalid OTP
+
+  /otp/reset-request:
+    post:
+      operationId: requestOtpReset
+      tags: [otp]
+      summary: Request OTP reset (sends email)
+      responses:
+        "200":
+          description: Reset email sent
+
+  /otp/reset:
+    post:
+      operationId: resetOtp
+      tags: [otp]
+      summary: Reset OTP with token from email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpResetInput"
+      responses:
+        "200":
+          description: OTP reset successful
+        "400":
+          description: Invalid or expired token
+
+  # Certificate
+  /certificate/ca:
+    get:
+      operationId: downloadCaCertificate
+      tags: [certificate]
+      summary: Download CA certificate (.crt file)
+      responses:
+        "200":
+          description: CA Certificate file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /certificate/ca/info:
+    get:
+      operationId: getCaCertificateInfo
+      tags: [certificate]
+      summary: Get CA certificate metadata
+      responses:
+        "200":
+          description: Certificate info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CertificateInfo"
+
+  # Digital ID
+  /digital-id/request:
+    post:
+      operationId: requestDigitalId
+      tags: [digital-id]
+      summary: Request a new digital ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DigitalIdInput"
+      responses:
+        "201":
+          description: Digital ID request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DigitalIdRequest"
+        "400":
+          description: Invalid input or OTP not setup
+
+  /digital-id/status:
+    get:
+      operationId: getDigitalIdStatus
+      tags: [digital-id]
+      summary: Get current user digital ID request status
+      responses:
+        "200":
+          description: Digital ID status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DigitalIdRequest"
+        "404":
+          description: No request found
+
+  /digital-id/download:
+    get:
+      operationId: downloadDigitalId
+      tags: [digital-id]
+      summary: Download approved digital ID (.p12 file)
+      responses:
+        "200":
+          description: Digital ID file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "403":
+          description: Not approved yet
+
+  # Signature image
+  /signature:
+    get:
+      operationId: getSignatureImage
+      tags: [signature]
+      summary: Get current user signature image
+      responses:
+        "200":
+          description: Signature image info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignatureImage"
+        "404":
+          description: No signature set
+
+    post:
+      operationId: uploadSignatureImage
+      tags: [signature]
+      summary: Upload signature image (base64)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignatureImageInput"
+      responses:
+        "200":
+          description: Signature saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignatureImage"
+
+  # Documents
+  /documents:
+    get:
+      operationId: listDocuments
+      tags: [documents]
+      summary: List current user documents
+      responses:
+        "200":
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+
+    post:
+      operationId: uploadDocument
+      tags: [documents]
+      summary: Upload a document for signing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentInput"
+      responses:
+        "201":
+          description: Document uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /documents/{id}:
+    get:
+      operationId: getDocument
+      tags: [documents]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      summary: Get document details
+      responses:
+        "200":
+          description: Document details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "404":
+          description: Not found
+
+    delete:
+      operationId: deleteDocument
+      tags: [documents]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      summary: Delete a document
+      responses:
+        "200":
+          description: Deleted
+
+  /sign-requests:
+    get:
+      operationId: listSignRequests
+      tags: [documents]
+      summary: List current user's own sign requests
+      responses:
+        "200":
+          description: User sign requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserSignRequest"
+        "401":
+          description: Unauthorized
+
+  /documents/{id}/sign:
+    post:
+      operationId: signDocument
+      tags: [documents]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      summary: Request document signing with OTP verification and signature position
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignRequestInput"
+      responses:
+        "201":
+          description: Sign request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignRequest"
+        "400":
+          description: Invalid OTP or missing digital ID
+
+  /documents/{id}/download:
+    get:
+      operationId: downloadSignedDocument
+      tags: [documents]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      summary: Download signed document (if approved)
+      responses:
+        "200":
+          description: Signed document file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "403":
+          description: Not signed yet
+
+  /documents/{id}/sign-status:
+    get:
+      operationId: getSignStatus
+      tags: [documents]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      summary: Get sign request status for a document
+      responses:
+        "200":
+          description: Sign request status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignRequest"
+        "404":
+          description: No sign request
+
+  # Admin
+  /admin/dashboard:
+    get:
+      operationId: getAdminDashboard
+      tags: [admin]
+      summary: Get admin dashboard stats
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDashboard"
+        "403":
+          description: Not admin
+
+  /admin/digital-id-requests:
+    get:
+      operationId: listAdminDigitalIdRequests
+      tags: [admin]
+      summary: List all digital ID requests
+      responses:
+        "200":
+          description: All digital ID requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DigitalIdRequest"
+        "403":
+          description: Not admin
+
+  /admin/digital-id-requests/{id}/approve:
+    post:
+      operationId: approveDigitalIdRequest
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      summary: Approve a digital ID request
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DigitalIdRequest"
+        "403":
+          description: Not admin
+
+  /admin/digital-id-requests/{id}/reject:
+    post:
+      operationId: rejectDigitalIdRequest
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      summary: Reject a digital ID request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectInput"
+      responses:
+        "200":
+          description: Rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DigitalIdRequest"
+        "403":
+          description: Not admin
+
+  /admin/digital-id-requests/{id}/revoke:
+    post:
+      operationId: revokeDigitalIdRequest
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      summary: Revoke an approved digital ID
+      responses:
+        "200":
+          description: Revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DigitalIdRequest"
+        "403":
+          description: Not admin
+
+  /admin/digital-id-requests/{id}/reactivate:
+    post:
+      operationId: reactivateDigitalIdRequest
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      summary: Reactivate (re-approve) a revoked or rejected digital ID
+      responses:
+        "200":
+          description: Reactivated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DigitalIdRequest"
+        "403":
+          description: Not admin
+
+  /admin/sign-requests/{id}/document:
+    get:
+      operationId: adminDownloadSignRequestDocument
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      summary: Download the source document for a sign request
+      responses:
+        "200":
+          description: PDF file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "403":
+          description: Not admin
+        "404":
+          description: Not found
+
+  /admin/sign-requests:
+    get:
+      operationId: listAdminSignRequests
+      tags: [admin]
+      summary: List all document sign requests
+      responses:
+        "200":
+          description: All sign requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SignRequest"
+        "403":
+          description: Not admin
+
+  /admin/sign-requests/{id}/approve:
+    post:
+      operationId: approveSignRequest
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      summary: Approve a document sign request
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignRequest"
+        "403":
+          description: Not admin
+
+  /admin/sign-requests/{id}/reject:
+    post:
+      operationId: rejectSignRequest
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      summary: Reject a document sign request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectInput"
+      responses:
+        "200":
+          description: Rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignRequest"
+        "403":
+          description: Not admin
+
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: List all users
+      responses:
+        "200":
+          description: All users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "403":
+          description: Not admin
+
+  # Verify
+  /verify/document:
+    post:
+      operationId: verifyDocument
+      tags: [verify]
+      summary: Verify document authenticity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyInput"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyResult"
+
+  /verify/qr/{token}:
+    get:
+      operationId: verifyByToken
+      tags: [verify]
+      summary: Verify document by QR token (public, no auth required)
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyQrResult"
+        "404":
+          description: Token not found
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    # Auth
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+        otpRequired:
+          type: boolean
+
+    User:
+      type: object
+      required: [id, email, name, role, otpEnabled]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, dosen, mahasiswa]
+        otpEnabled:
+          type: boolean
+        digitalIdStatus:
+          type: ["string", "null"]
+          enum: [pending, approved, rejected, revoked, "null"]
+        hasSignature:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    # OTP
+    OtpSetup:
+      type: object
+      required: [qrCodeUrl, secret]
+      properties:
+        qrCodeUrl:
+          type: string
+        secret:
+          type: string
+
+    ChangePasswordInput:
+      type: object
+      required: [oldPassword, newPassword, otpCode]
+      properties:
+        oldPassword:
+          type: string
+        newPassword:
+          type: string
+        otpCode:
+          type: string
+
+    MessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
+    OtpVerifyInput:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+
+    OtpVerifyResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    OtpResetInput:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+
+    # Certificate
+    CertificateInfo:
+      type: object
+      required: [name, issuer, validFrom, validTo, downloadUrl]
+      properties:
+        name:
+          type: string
+        issuer:
+          type: string
+        validFrom:
+          type: string
+        validTo:
+          type: string
+        downloadUrl:
+          type: string
+        instructions:
+          type: string
+
+    # Digital ID
+    DigitalIdInput:
+      type: object
+      required: [name, role, email, passphrase]
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [dosen, mahasiswa]
+        email:
+          type: string
+          format: email
+        passphrase:
+          type: string
+        nimNip:
+          type: string
+          description: NIM (mahasiswa) or NIP (dosen)
+
+    DigitalIdRequest:
+      type: object
+      required: [id, userId, name, role, email, status, isApproved, isReady, isSent, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [dosen, mahasiswa]
+        email:
+          type: string
+        nimNip:
+          type: ["string", "null"]
+          description: NIM (mahasiswa) or NIP (dosen)
+        status:
+          type: string
+          enum: [pending, approved, rejected, revoked]
+        isApproved:
+          type: boolean
+        isReady:
+          type: boolean
+        isSent:
+          type: boolean
+        rejectionReason:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # Signature
+    SignatureImageInput:
+      type: object
+      required: [imageData]
+      properties:
+        imageData:
+          type: string
+          description: Base64-encoded image
+
+    SignatureImage:
+      type: object
+      required: [id, userId, imageData, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        imageData:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # Documents
+    DocumentInput:
+      type: object
+      required: [name, fileData, fileType]
+      properties:
+        name:
+          type: string
+        fileData:
+          type: string
+          description: Base64-encoded file
+        fileType:
+          type: string
+        pageCount:
+          type: integer
+
+    Document:
+      type: object
+      required: [id, userId, name, fileType, status, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        fileType:
+          type: string
+        status:
+          type: string
+          enum: [uploaded, pending_sign, signed, rejected]
+        pageCount:
+          type: ["integer", "null"]
+        rejectionReason:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UserSignRequest:
+      type: object
+      required: [id, documentId, status, createdAt]
+      properties:
+        id:
+          type: integer
+        documentId:
+          type: integer
+        documentName:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        rejectionReason:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SignRequestInput:
+      type: object
+      required: [otpCode, passphrase, signaturePage, signatureX, signatureY, signatureWidth, signatureHeight]
+      properties:
+        otpCode:
+          type: string
+        passphrase:
+          type: string
+          description: Passphrase Digital ID pengguna
+        signaturePage:
+          type: integer
+          description: Page number (1-indexed)
+        signatureX:
+          type: number
+          description: X position as percentage (0-100)
+        signatureY:
+          type: number
+          description: Y position as percentage (0-100)
+        signatureWidth:
+          type: number
+          description: Width as percentage of page width
+        signatureHeight:
+          type: number
+          description: Height as percentage of page height
+
+    SignRequest:
+      type: object
+      required: [id, documentId, userId, status, signaturePage, signatureX, signatureY, createdAt]
+      properties:
+        id:
+          type: integer
+        documentId:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        documentName:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        signaturePage:
+          type: integer
+        signatureX:
+          type: number
+        signatureY:
+          type: number
+        signatureWidth:
+          type: number
+        signatureHeight:
+          type: number
+        rejectionReason:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # Admin
+    AdminDashboard:
+      type: object
+      required: [totalUsers, pendingDigitalIdRequests, pendingSignRequests, totalDocuments, approvedDigitalIds, totalSignedDocuments]
+      properties:
+        totalUsers:
+          type: integer
+        pendingDigitalIdRequests:
+          type: integer
+        pendingSignRequests:
+          type: integer
+        totalDocuments:
+          type: integer
+        approvedDigitalIds:
+          type: integer
+        totalSignedDocuments:
+          type: integer
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+
+    ActivityItem:
+      type: object
+      required: [id, type, description, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    RejectInput:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+
+    # Verify
+    VerifyInput:
+      type: object
+      required: [fileData]
+      properties:
+        fileData:
+          type: string
+          description: Base64-encoded document to verify
+
+    VerifyResult:
+      type: object
+      required: [isValid, message]
+      properties:
+        isValid:
+          type: boolean
+        message:
+          type: string
+        signerName:
+          type: ["string", "null"]
+        signerEmail:
+          type: ["string", "null"]
+        signedAt:
+          type: ["string", "null"]
+        details:
+          type: string
+
+    VerifyQrResult:
+      type: object
+      required: [isValid, documentName, signerName, signerEmail, signedAt]
+      properties:
+        isValid:
+          type: boolean
+        documentName:
+          type: string
+        signerName:
+          type: string
+        signerEmail:
+          type: string
+        signerRole:
+          type: string
+        nimNip:
+          type: ["string", "null"]
+        signedAt:
+          type: string
+          format: date-time
