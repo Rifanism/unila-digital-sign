@@ -84,7 +84,7 @@ git clone https://github.com/Rifanism/unila-digital-sign.git
 2. Install dependencies
 ```
 cd Unila-Digital-Sign
-npm install
+pnpm install
 ```
 3. Push database schema (postgresql)
 ```
