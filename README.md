@@ -83,7 +83,7 @@ git clone https://github.com/Rifanism/katala.git
 ```
 2. Install dependencies
 ```
-cd katala
+cd Unila-Digital-Sign
 npm install
 ```
 3. Push database schema (postgresql)
