@@ -2,9 +2,6 @@
 
 trap 'kill 0' EXIT
 
-echo "🚀 Menjalankan Unila Digital Sign..."
-echo ""
-
 PORT=8080 pnpm --filter @workspace/api-server run dev &
 API_PID=$!
 
