@@ -101,3 +101,14 @@ SESSION_SECRET=random string
 ```
 ./dev.sh
 ```
+## SSL & Validation Proof
+
+### SSL Proof
+<div>
+  <img src="artifacts/unila-digital-sign/public/ssl_proof.png" alt="SSL Validation Proof" />
+</div>
+
+### Validation Proof
+<div>
+  <img src="artifacts/unila-digital-sign/public/validation_proof.png" alt="Validation Proof" />
+</div>
