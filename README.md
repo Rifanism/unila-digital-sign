@@ -105,7 +105,7 @@ SESSION_SECRET=random string
 
 ### SSL Proof
 <div>
-  <img src="artifacts/unila-digital-sign/public/secure_proof.png" alt="SSL Validation Proof" />
+  <img width="60%" src="artifacts/unila-digital-sign/public/secure_proof.png" alt="SSL Proof" />
 </div>
 
 ### Validation Proof
