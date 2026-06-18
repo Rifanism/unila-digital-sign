@@ -1,6 +1,7 @@
 import { Router } from "express";
 import forge from "node-forge";
 import crypto from "crypto";
+import os from "os";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import { pdflibAddPlaceholder } from "@signpdf/placeholder-pdf-lib";
@@ -11,6 +12,21 @@ import { eq, count, and } from "drizzle-orm";
 import { requireAdmin, type AuthRequest } from "../middlewares/auth";
 import { generateUserP12 } from "../lib/ca";
 import { logger } from "../lib/logger";
+
+function getAppBaseUrl(): string {
+  if (process.env["APP_BASE_URL"]) {
+    return process.env["APP_BASE_URL"].replace(/\/$/, "");
+  }
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name] ?? []) {
+      if (net.family === "IPv4" && !net.internal) {
+        return `http://${net.address}:21426`;
+      }
+    }
+  }
+  return "http://localhost:21426";
+}
 
 const router = Router();
 
@@ -292,10 +308,8 @@ router.post("/admin/sign-requests/:id/approve", requireAdmin, async (req: AuthRe
       const pdfDoc = await PDFDocument.load(originalPdfBytes, { ignoreEncryption: true });
 
       const verificationToken = crypto.randomUUID();
-      const appDomain = process.env["REPLIT_DEV_DOMAIN"]
-        ? `https://${process.env["REPLIT_DEV_DOMAIN"]}`
-        : `http://localhost:5000`;
-      const verifyUrl = `${appDomain}/verify-qr/${verificationToken}`;
+      const verifyUrl = `${getAppBaseUrl()}/#/verify-qr/${verificationToken}`;
+      logger.info({ verifyUrl }, "QR code verification URL generated");
 
       let qrPngBuffer: Buffer | null = null;
       try {

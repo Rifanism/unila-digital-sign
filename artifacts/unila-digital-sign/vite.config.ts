@@ -65,8 +65,8 @@ export default defineConfig({
     host: "0.0.0.0",
     allowedHosts: true,
     https: {
-      key: fs.readFileSync(path.resolve(import.meta.dirname, "../../localhost+2-key.pem")),
-      cert: fs.readFileSync(path.resolve(import.meta.dirname, "../../localhost+2.pem")),
+      key: fs.readFileSync(path.resolve(import.meta.dirname, "../../unila-dgsign.local-key.pem")),
+      cert: fs.readFileSync(path.resolve(import.meta.dirname, "../../unila-dgsign.local.pem")),
     },
     proxy: {
       "/api": {

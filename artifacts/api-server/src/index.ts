@@ -19,8 +19,8 @@ if (Number.isNaN(port) || port <= 0) {
 }
 
 const sslOptions = {
-  key: fs.readFileSync(path.resolve(__dirname, "../../../localhost+2-key.pem")),
-  cert: fs.readFileSync(path.resolve(__dirname, "../../../localhost+2.pem")),
+  key: fs.readFileSync(path.resolve(__dirname, "../../../unila-dgsign.local-key.pem")),
+  cert: fs.readFileSync(path.resolve(__dirname, "../../../unila-dgsign.local.pem")),
 };
 
 const server = https.createServer(sslOptions, app);
