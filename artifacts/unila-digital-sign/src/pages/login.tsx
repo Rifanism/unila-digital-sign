@@ -64,7 +64,7 @@ export default function Login() {
         <Card className="shadow-lg border-0 ring-1 ring-gray-900/5">
           <CardHeader>
             <CardTitle>Masuk ke Akun</CardTitle>
-            <CardDescription>Gunakan email resmi unila</CardDescription>
+            <CardDescription>Gunakan akun SSO Unila</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-5">
